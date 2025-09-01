@@ -150,12 +150,7 @@ def search():
         users = User.query.filter(User.username.ilike(search_term)).all()
     return render_template("search_results.html", users=users, query=query)
 
-@app.route("/_internal/create_db")
-def create_db():
-    """A special one-time route to create database tables on Render."""
-    with app.app_context():
-        db.create_all()
-    return "Database tables created successfully!"
+
 
 @app.errorhandler(404)
 def page_not_found(e):
