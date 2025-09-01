@@ -6,25 +6,32 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-# --- DEPLOYMENT-READY CONFIGURATION ---
+# --- DEPLOYMENT-READY DATABASE CONFIGURATION ---
+# Try to get the DATABASE_URL from the environment (for Render).
+# If it's not found, fall back to the local SQLite database.
+db_uri = os.getenv('DATABASE_URL', 'sqlite:///' + os.path.join(basedir, 'codefolio.db'))
 
-data_dir = os.path.join(basedir, 'data')
-os.makedirs(data_dir, exist_ok=True)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(data_dir, 'codefolio.db')
+# Heroku/Render use 'postgres://' but SQLAlchemy needs 'postgresql://'
+if db_uri.startswith("postgres://"):
+    db_uri = db_uri.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'a-default-secret-key-for-local-use')
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'a-super-secret-key-for-local-use')
 
 db = SQLAlchemy(app)
 
-# --- Database Models ---
+# --- Database Models (No changes needed) ---
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    # ... (rest of the model is the same)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     projects = db.relationship('Project', backref='owner', lazy=True, cascade="all, delete-orphan")
 
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    # ... (rest of the model is the same)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
     tech_used = db.Column(db.String(200), nullable=False)
