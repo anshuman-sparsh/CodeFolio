@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+{% block title %}Search Results{% endblock %}
+{% block content %}
+<div class="search-results-container">
+    <h1>Search Results for "{{ query }}"</h1>
+
+    {% if users %}
+        <ul class="user-list">
+            {% for user in users %}
+                <li>
+                    <a href="{{ url_for('portfolio', username=user.username) }}">
+                        {{ user.username }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No users found matching your search.</p>
+    {% endif %}
+</div>
+{% endblock %}

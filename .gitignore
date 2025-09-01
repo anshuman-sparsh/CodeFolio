@@ -1,0 +1,8 @@
+# Ignore the local database file
+codefolio.db
+
+# Ignore Python cache
+__pycache__/
+
+# Ignore virtual environment folder
+venv/
