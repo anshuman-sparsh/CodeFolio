@@ -6,32 +6,22 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-# --- DEPLOYMENT-READY DATABASE CONFIGURATION ---
-# Try to get the DATABASE_URL from the environment (for Render).
-# If it's not found, fall back to the local SQLite database.
-db_uri = os.getenv('DATABASE_URL', 'sqlite:///' + os.path.join(basedir, 'codefolio.db'))
-
-# Heroku/Render use 'postgres://' but SQLAlchemy needs 'postgresql://'
-if db_uri.startswith("postgres://"):
-    db_uri = db_uri.replace("postgres://", "postgresql://", 1)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
+# Simple configuration for a single SQLite database file
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'codefolio.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'a-super-secret-key-for-local-use')
+app.config['SECRET_KEY'] = 'a-super-secret-key-you-should-change' # We will replace this on the server
 
 db = SQLAlchemy(app)
 
-# --- Database Models (No changes needed) ---
+# --- Database Models (No changes) ---
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    # ... (rest of the model is the same)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     projects = db.relationship('Project', backref='owner', lazy=True, cascade="all, delete-orphan")
 
 class Project(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    # ... (rest of the model is the same)
     title = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
     tech_used = db.Column(db.String(200), nullable=False)
@@ -156,13 +146,6 @@ def search():
 def page_not_found(e):
     return render_template("404.html"), 404
 
-
-@app.route("/_internal/init_db")
-def init_db():
-    """A special one-time route to create database tables on Render."""
-    with app.app_context():
-        db.create_all()
-    return "Database tables created successfully!"
 
 if __name__ == "__main__":
     with app.app_context():
